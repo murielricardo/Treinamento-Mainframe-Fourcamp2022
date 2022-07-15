@@ -1,0 +1,233 @@
+      *===============================================================*
+       IDENTIFICATION                              DIVISION.
+      *===============================================================*
+
+       PROGRAM-ID. MD022502.
+
+      *===============================================================*
+      *   AUTOR.....:MURIEL ANDRIGUETO                                *
+      *   INSTRUTOR.:IVAN PETRUCCI                                    *
+      *   DATA .....:07/07/2022                                       *
+      *---------------------------------------------------------------*
+      *   OBJETIVO: LER, GRAVAR, DELETAR E REGRAVAR REGISTROS EM UM   *
+      *             ARQUIVO VSAM, USANDO (PARM) NO JCL DE EXECUCAO.   *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *   ARQUIVOS: DDNAME......   I/O             INCLUDE/BOOK       *
+      *             EVSA0407        I                #FOURW47         *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *   MODULOS....:-----                                           *
+      *===============================================================*
+      *===============================================================*
+       ENVIRONMENT                                 DIVISION.
+      *===============================================================*
+      *---------------------------------------------------------------*
+       CONFIGURATION                               SECTION.
+      *---------------------------------------------------------------*
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+
+      *---------------------------------------------------------------*
+       INPUT-OUTPUT                                SECTION.
+      *---------------------------------------------------------------*
+       FILE-CONTROL.
+           SELECT EVSA0407 ASSIGN TO EVSA0407
+              ORGANIZATION   IS INDEXED
+              ACCESS MODE    IS DYNAMIC
+              RECORD KEY     IS ARQ-CHAVE
+              FILE STATUS    IS FS-EVSA0407.
+      *===============================================================*
+       DATA                                        DIVISION.
+      *===============================================================*
+      *---------------------------------------------------------------*
+       FILE                                        SECTION.
+      *---------------------------------------------------------------*
+       FD EVSA0407.
+       01 REG-EVSA0407.
+          05 ARQ-CHAVE.
+             10 ARQ-AGENCIA  PIC X(04).
+             10 ARQ-CONTA    PIC X(05).
+          05 ARQ-SALARIO     PIC X(10).
+
+      *---------------------------------------------------------------*
+       WORKING-STORAGE                             SECTION.
+      *---------------------------------------------------------------*
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '-------VARIAVEIS DE ACUMULACAO----------'.
+      *---------------------------------------------------------------*
+       77 WRK-LEN          PIC 99999.
+       77 FS-EVSA0407      PIC X(02).
+
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '-------VARIAVEIS DE MENSAGEM------------'.
+      *---------------------------------------------------------------*
+       77 WRK-MSGERROOPEN  PIC X(14) VALUE 'ERRO OPEN VSAM'.
+       77 WRK-MSGREGENCON  PIC X(19) VALUE 'REGISTRO ENCONTRADO'.
+       77 WRK-MSGREGNAOEN  PIC X(23) VALUE 'REGISTRO NAO ENCONTRADO'.
+       77 WRK-MSGREGGRAV   PIC X(16) VALUE 'REGISTRO GRAVADO'.
+       77 WRK-MSGREGNAOGR  PIC X(20) VALUE 'REGISTRO NAO GRAVADO'.
+       77 WRK-MSGREGEXIST  PIC X(21) VALUE 'REGISTRO JA EXISTENTE'.
+       77 WRK-MSGREGDEL    PIC X(17) VALUE 'REGISTRO DELETADO'.
+
+       77 WRK-MSGSALINVA   PIC X(16) VALUE 'SALARIO INVALIDO'.
+       77 WRK-MSGREGREGRA  PIC X(18) VALUE 'REGISTRO REGRAVADO'.
+       77 WRK-MSGREGNAORE  PIC X(22) VALUE 'REGISTRO NAO REGRAVADO'.
+       77 WRK-MSGSTATUS    PIC X(08) VALUE 'STATUS: '.
+       77 WRK-SPACES       PIC X(02) VALUE SPACES.
+       77 WRK-MSGFINALPRO  PIC X(28) VALUE
+                                       '---FINAL DE PROCESSAMENTO---'.
+      *---------------------------------------------------------------*
+       LINKAGE                                    SECTION.
+      *---------------------------------------------------------------*
+
+       COPY '#FOURW47'.
+
+      *===============================================================*
+       PROCEDURE                           DIVISION USING LNK-ENTRADA.
+      *===============================================================*
+
+      *---------------------------------------------------------------*
+       0000-PRINCIPAL                            SECTION.
+      *---------------------------------------------------------------*
+           PERFORM  1000-INICIAR.
+           PERFORM  2000-PROCESSAR.
+           PERFORM  3000-FINALIZAR.
+           GOBACK.
+      *---------------------------------------------------------------*
+       0000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1000-INICIAR                              SECTION.
+      *---------------------------------------------------------------*
+           OPEN I-O EVSA0407.
+           PERFORM 1200-TESTA-STATUS.
+      *---------------------------------------------------------------*
+       1000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1200-TESTA-STATUS                         SECTION.
+      *---------------------------------------------------------------*
+           IF FS-EVSA0407 NOT EQUAL ZEROS
+             DISPLAY WRK-MSGERROOPEN
+             DISPLAY WRK-MSGSTATUS FS-EVSA0407
+           END-IF.
+      *---------------------------------------------------------------*
+       1200-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2000-PROCESSAR                            SECTION.
+      *---------------------------------------------------------------*
+           EVALUATE LNK-OPER
+             WHEN 'L'
+              PERFORM 2100-LEITURA
+             WHEN 'G'
+              PERFORM 2200-GRAVACAO
+             WHEN 'D'
+              PERFORM 2300-DELETAR
+             WHEN 'R'
+              PERFORM 2400-REGRAVACAO
+           END-EVALUATE.
+      *---------------------------------------------------------------*
+       2000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2100-LEITURA                              SECTION.
+      *---------------------------------------------------------------*
+           MOVE LNK-AGENCIA TO ARQ-AGENCIA.
+           MOVE LNK-CONTA   TO ARQ-CONTA.
+           READ EVSA0407.
+
+           IF FS-EVSA0407 EQUAL ZEROS
+             DISPLAY WRK-MSGREGENCON
+             DISPLAY REG-EVSA0407
+           ELSE
+             DISPLAY WRK-MSGREGNAOEN
+             DISPLAY WRK-MSGSTATUS FS-EVSA0407
+           END-IF.
+      *---------------------------------------------------------------*
+       2100-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2200-GRAVACAO                             SECTION.
+      *---------------------------------------------------------------*
+           MOVE LNK-AGENCIA TO ARQ-AGENCIA.
+           MOVE LNK-CONTA   TO ARQ-CONTA.
+           MOVE LNK-SALARIO TO ARQ-SALARIO.
+           WRITE REG-EVSA0407.
+
+           IF FS-EVSA0407 EQUAL ZEROS
+             DISPLAY WRK-MSGREGGRAV
+             DISPLAY REG-EVSA0407
+           ELSE
+             IF FS-EVSA0407 EQUAL 22
+               DISPLAY WRK-MSGREGEXIST
+             END-IF
+             DISPLAY WRK-MSGREGNAOGR
+             DISPLAY WRK-MSGSTATUS FS-EVSA0407
+           END-IF.
+      *---------------------------------------------------------------*
+       2200-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2300-DELETAR                              SECTION.
+      *---------------------------------------------------------------*
+           MOVE LNK-AGENCIA TO ARQ-AGENCIA.
+           MOVE LNK-CONTA   TO ARQ-CONTA.
+           READ EVSA0407.
+
+           IF FS-EVSA0407 EQUAL ZEROS
+             DELETE EVSA0407
+             DISPLAY WRK-MSGREGDEL
+           ELSE
+             DISPLAY WRK-MSGREGNAOEN
+             DISPLAY WRK-MSGSTATUS FS-EVSA0407
+           END-IF.
+      *---------------------------------------------------------------*
+       2300-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2400-REGRAVACAO                           SECTION.
+      *---------------------------------------------------------------*
+           IF LNK-SALARIO EQUAL ZEROS OR LNK-SALARIO NOT NUMERIC
+             DISPLAY WRK-MSGSALINVA
+             DISPLAY WRK-MSGREGNAORE
+             GO TO 2400-99-FIM
+           ELSE
+             MOVE LNK-AGENCIA TO ARQ-AGENCIA
+             MOVE LNK-CONTA   TO ARQ-CONTA
+             READ EVSA0407
+           END-IF.
+
+           IF FS-EVSA0407 EQUAL ZEROS
+             MOVE LNK-SALARIO TO ARQ-SALARIO
+             REWRITE REG-EVSA0407
+             DISPLAY WRK-MSGREGREGRA
+             DISPLAY REG-EVSA0407
+           ELSE
+             DISPLAY WRK-MSGREGNAOEN
+             DISPLAY WRK-MSGSTATUS FS-EVSA0407
+           END-IF.
+      *---------------------------------------------------------------*
+       2400-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       3000-FINALIZAR                            SECTION.
+      *---------------------------------------------------------------*
+           CLOSE EVSA0407.
+           DISPLAY WRK-SPACES.
+           DISPLAY WRK-MSGFINALPRO.
+      *---------------------------------------------------------------*
+       3000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+

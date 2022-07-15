@@ -1,0 +1,278 @@
+      *===============================================================*
+       IDENTIFICATION                              DIVISION.
+      *===============================================================*
+
+       PROGRAM-ID. MD022504.
+
+      *===============================================================*
+      *   AUTOR.....:MURIEL ANDRIGUETO                                *
+      *   INSTRUTOR.:IVAN PETRUCCI                                    *
+      *   DATA .....:12/07/2022                                       *
+      *---------------------------------------------------------------*
+      *   OBJETIVO: PROGRAMA PARA UPDATE DE REGISTROS DE UM ARQUIVO   *
+      *             VSAM(EVSA0407) UTILIZANDO UM ARQUIVO SEQUENCIAL   *
+      *             (MOV1207)                                         *
+      *---------------------------------------------------------------*
+      *                     A L T E R A C O E S                       *
+4SYS25*---------------------------------------------------------------*
+  .   *   AUTO.....: MURIEL ANDRIGUETO                                *
+  .   *   DATA.....: 12/07/2022                                       *
+  .   *---------------------------------------------------------------*
+  .   *   OBJETIVO.: CRIAR ARQUIVO DE SAIDA (EXC1207) PARA GRAVACAO   *
+  .   *              DOS REGISTROS COM EXCECAO                        *
+4SYS25*---------------------------------------------------------------*
+      *   ARQUIVOS: DDNAME......   I/O                COPY/BOOK       *
+      *             EVSA0407        O                     -           *
+      *             MOV1207         I                     -           *
+4SYS25*             EXC1207         O                     -           *
+      *---------------------------------------------------------------*
+      *   MODULOS....:-----                         INCLUDE/BOOK      *
+      *===============================================================*
+      *===============================================================*
+       ENVIRONMENT                                 DIVISION.
+      *===============================================================*
+      *---------------------------------------------------------------*
+       CONFIGURATION                               SECTION.
+      *---------------------------------------------------------------*
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+
+      *---------------------------------------------------------------*
+       INPUT-OUTPUT                                SECTION.
+      *---------------------------------------------------------------*
+       FILE-CONTROL.
+           SELECT EVSA0407 ASSIGN TO EVSA0407
+              ORGANIZATION IS INDEXED
+              ACCESS MODE  IS DYNAMIC
+              RECORD KEY   IS FD-CHAVE
+              FILE STATUS  IS FS-EVSA0407.
+
+           SELECT MOV1207 ASSIGN TO MOV1207
+              FILE STATUS  IS FS-MOV1207.
+
+4SYS25     SELECT EXC1207 ASSIGN TO EXC1207
+4SYS25        FILE STATUS  IS FS-EXC1207.
+      *===============================================================*
+       DATA                                        DIVISION.
+      *===============================================================*
+      *---------------------------------------------------------------*
+       FILE                                        SECTION.
+      *---------------------------------------------------------------*
+       FD EVSA0407.
+       01 FD-EVSA0407.
+          05 FD-CHAVE.
+             10 FD-AGENCIA  PIC X(04).
+             10 FD-CONTA    PIC X(05).
+          05 FD-SALDO       PIC X(10).
+
+       FD MOV1207
+            RECORDING MODE IS F
+            BLOCK CONTAINS 0 RECORDS.
+
+       01 FD-MOV1207.
+         05 FD-MOV1207-CHAVE.
+            10 FD-MOV1207-AGENCIA  PIC X(04).
+            10 FD-MOV1207-CONTA    PIC X(05).
+         05 FD-MOV1207-SALDO       PIC X(10).
+
+4SYS25 FD EXC1207
+  .         RECORDING MODE IS F
+  .         BLOCK CONTAINS 0 RECORDS.
+  .
+4SYS25 01 FD-EXC1207   PIC X(19).
+      *---------------------------------------------------------------*
+       WORKING-STORAGE                             SECTION.
+      *---------------------------------------------------------------*
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '-------VARIAVEIS DE STATUS--------------'.
+      *---------------------------------------------------------------*
+       77 FS-EVSA0407      PIC 9(02).
+       77 FS-MOV1207       PIC 9(02).
+4SYS25 77 FS-EXC1207       PIC 9(02).
+
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '-------VARIAVEIS DE ACUMULACAO----------'.
+      *---------------------------------------------------------------*
+       01 WRK-EVSA0407.
+          05 WRK-CHAVE.
+             10 WRK-AGENCIA   PIC X(04).
+             10 WRK-CONTA     PIC X(05).
+          05 WRK-SALDO        PIC X(10).
+
+       77 WRK-FLAGERRO        PIC 9(02) VALUE 0.
+       77 WRK-REGLIDOS        PIC 9(03).
+       77 WRK-REGGRAVADOS     PIC 9(03) VALUE ZEROS.
+       77 WRK-REGEXCECAO      PIC 9(03) VALUE ZEROS.
+       77 WRK-SAIDA-REGISTRO  PIC X(19).
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+              '--------VARIAVEIS PARA MENSAGEM--------------'.
+      *---------------------------------------------------------------*
+       77 WRK-ERROABERTARQ PIC X(23) VALUE
+                           'ERRO OPEN ARQ: MOV1207'.
+       77 WRK-ERRCLOSEARQ  PIC X(25) VALUE
+                           'ERRO CLOSE ARQ: MOV1207'.
+       77 WRK-ARQVAZIO     PIC X(22) VALUE
+                           'ARQUIVO VAZIO: MOV1207'.
+       77 WRK-MSGCODARQ    PIC X(13) VALUE 'CODIGO ERRO: '.
+
+       77 WRK-ERROABERTVSA PIC X(28) VALUE
+                           'ERRO OPEN ARQ VSAM: EVSA0407'.
+       77 WRK-ERRCLOSEVSAM PIC X(29) VALUE
+                           'ERRO CLOSE ARQ VSAM: EVSA0407'.
+       77 WRK-MSGCODVSAM   PIC X(13) VALUE 'CODIGO VSAM: '.
+
+       77 WRK-MSGREGLIDOS  PIC X(20) VALUE 'REGISTROS LIDOS   : '.
+       77 WRK-MSGREGGRAV   PIC X(20) VALUE 'REGISTROS GRAVADOS: '.
+       77 WRK-MSGREGATUA   PIC X(21) VALUE 'REGISTRO ATUALIZADO: '.
+       77 WRK-MSGTOTEXCE   PIC X(20) VALUE 'TOTAL DE EXCECOES : '.
+
+       77 WRK-MSGFIMPROG   PIC X(22) VALUE '----FIM DE PROGRAMA---'.
+       77 WRK-ESPACOS      PIC X(10) VALUE SPACES.
+       77 WRK-TRACOS       PIC X(25) VALUE ALL '-'.
+      *===============================================================*
+       PROCEDURE                                 DIVISION.
+      *===============================================================*
+
+      *---------------------------------------------------------------*
+       0000-PRINCIPAL                            SECTION.
+      *---------------------------------------------------------------*
+           PERFORM  1000-INICIAR.
+            PERFORM 1200-TESTA-VAZIO.
+           PERFORM  2000-PROCESSAR UNTIL FS-MOV1207 EQUAL 10.
+           PERFORM  3000-FINALIZAR.
+           GOBACK.
+      *---------------------------------------------------------------*
+       0000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1000-INICIAR                              SECTION.
+      *---------------------------------------------------------------*
+           OPEN I-O EVSA0407.
+           OPEN INPUT MOV1207.
+4SYS25     OPEN OUTPUT EXC1207.
+            PERFORM 1300-TESTA-STATUS.
+      *---------------------------------------------------------------*
+       1000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1200-TESTA-VAZIO                          SECTION.
+      *---------------------------------------------------------------*
+           READ MOV1207
+           EVALUATE FS-MOV1207
+            WHEN 0
+             CONTINUE
+            WHEN 10
+             MOVE 1 TO WRK-FLAGERRO
+              PERFORM 9000-TRATAERROS
+            WHEN OTHER
+             MOVE 2 TO WRK-FLAGERRO
+              PERFORM 9000-TRATAERROS
+           END-EVALUATE.
+      *---------------------------------------------------------------*
+       1200-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1300-TESTA-STATUS                         SECTION.
+      *---------------------------------------------------------------*
+           IF FS-EVSA0407 NOT EQUAL 0
+             MOVE 6 TO WRK-FLAGERRO
+              PERFORM 9000-TRATAERROS
+           END-IF.
+      *---------------------------------------------------------------*
+       1300-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2000-PROCESSAR                            SECTION.
+      *---------------------------------------------------------------*
+4SYS25      INITIALIZE WRK-EVSA0407
+            MOVE FD-MOV1207 TO WRK-EVSA0407
+            MOVE FD-MOV1207-CHAVE TO FD-CHAVE
+             READ EVSA0407
+                IF FS-EVSA0407 EQUAL ZEROS
+                  MOVE FD-MOV1207 TO WRK-EVSA0407
+                   REWRITE FD-EVSA0407 FROM WRK-EVSA0407
+4SYS25              IF FS-EVSA0407 EQUAL ZEROS AND
+  .                    FD-MOV1207-SALDO NOT EQUAL ZEROS OR
+4SYS25                 FD-MOV1207-SALDO IS NUMERIC
+                      ADD 1 TO WRK-REGGRAVADOS
+                      DISPLAY WRK-MSGREGATUA WRK-EVSA0407
+                    END-IF
+                ELSE
+                    ADD 1 TO WRK-REGEXCECAO
+4SYS25              WRITE FD-EXC1207 FROM WRK-EVSA0407
+                END-IF.
+             ADD 1 TO WRK-REGLIDOS.
+             READ MOV1207.
+      *---------------------------------------------------------------*
+       3000-FINALIZAR                            SECTION.
+      *---------------------------------------------------------------*
+           CLOSE EVSA0407
+                 MOV1207
+4SYS25           EXC1207.
+           PERFORM 3100-TESTA-CLOSE.
+           PERFORM 3200-DISPLAY-FINALIZAR.
+      *---------------------------------------------------------------*
+       3000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       3100-TESTA-CLOSE                          SECTION.
+      *---------------------------------------------------------------*
+           IF FS-MOV1207 NOT EQUAL ZEROS
+             MOVE 4 TO WRK-FLAGERRO
+             PERFORM 9000-TRATAERROS
+           END-IF.
+
+           IF FS-EVSA0407 NOT EQUAL ZEROS
+             MOVE 5 TO WRK-FLAGERRO
+             PERFORM 9000-TRATAERROS
+           END-IF.
+      *---------------------------------------------------------------*
+       3100-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       3200-DISPLAY-FINALIZAR                    SECTION.
+      *---------------------------------------------------------------*
+           DISPLAY WRK-ESPACOS.
+           DISPLAY WRK-TRACOS.
+           DISPLAY WRK-MSGREGLIDOS WRK-REGLIDOS.
+           DISPLAY WRK-MSGREGGRAV  WRK-REGGRAVADOS.
+           DISPLAY WRK-MSGTOTEXCE  WRK-REGEXCECAO.
+           DISPLAY WRK-TRACOS.
+           DISPLAY WRK-MSGFIMPROG.
+      *---------------------------------------------------------------*
+       3200-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *-------------------------------------------------------------*
+       9000-TRATAERROS                           SECTION.
+      *-------------------------------------------------------------*
+           EVALUATE WRK-FLAGERRO
+            WHEN 1
+             DISPLAY WRK-ARQVAZIO
+             DISPLAY WRK-MSGCODARQ FS-MOV1207
+            WHEN 2
+             DISPLAY WRK-ERROABERTARQ
+             DISPLAY WRK-MSGCODARQ FS-MOV1207
+            WHEN 4
+             DISPLAY WRK-ERRCLOSEARQ
+             DISPLAY WRK-MSGCODARQ FS-MOV1207
+            WHEN 5
+             DISPLAY WRK-ERRCLOSEVSAM
+             DISPLAY WRK-MSGCODVSAM FS-EVSA0407
+            WHEN 6
+             DISPLAY WRK-ERROABERTVSA
+             DISPLAY WRK-MSGCODVSAM FS-EVSA0407
+           END-EVALUATE.
+           GOBACK.
+      *-------------------------------------------------------------*
+       9000-99-FIM.                              EXIT.
+      *-------------------------------------------------------------*

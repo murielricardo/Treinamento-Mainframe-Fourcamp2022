@@ -1,0 +1,256 @@
+      *===============================================================*
+       IDENTIFICATION                              DIVISION.
+      *===============================================================*
+
+       PROGRAM-ID. MD022501.
+
+      *===============================================================*
+      *   AUTOR.....:MURIEL ANDRIGUETO                                *
+      *   INSTRUTOR.:IVAN PETRUCCI                                    *
+      *   DATA .....:06/07/2022                                       *
+      *---------------------------------------------------------------*
+      *   OBJETIVO: ESTE PROGRAMA TEM A FINALIDADE DE FAZER A LEITURA *
+      *             DO ARQUIVO EVSA0407, FORMATAR OS DADOS DE UM      *
+      *             ARQUIVO SEQUENCIAL COM REGISTROS ONDE SALDO FOR   *
+      *             MAIOR QUE 0. SALDOS MENORES DEVERAO SER           *
+      *             DESPREZADOS NA SYSOUT.                            *
+      *---------------------------------------------------------------*
+      *   ARQUIVOS: DDNAME......   I/O             INCLUDE/BOOK       *
+      *             EVSA0407        I              -----------        *
+      *             SVSA0407        O                I#BV0407         *
+      *---------------------------------------------------------------*
+      *   MODULOS....:-----                                           *
+      *===============================================================*
+      *===============================================================*
+       ENVIRONMENT                                 DIVISION.
+      *===============================================================*
+      *---------------------------------------------------------------*
+       CONFIGURATION                               SECTION.
+      *---------------------------------------------------------------*
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+
+      *---------------------------------------------------------------*
+       INPUT-OUTPUT                                SECTION.
+      *---------------------------------------------------------------*
+       FILE-CONTROL.
+           SELECT EVSA0407 ASSIGN TO EVSA0407
+              ORGANIZATION IS INDEXED
+              ACCESS MODE  IS SEQUENTIAL
+              RECORD KEY   IS ARQ-CHAVE
+              FILE STATUS  IS FS-EVSA0407.
+
+           SELECT SVSA0407 ASSIGN TO SVSA0407
+              FILE STATUS  IS FS-SVSA0407.
+      *===============================================================*
+       DATA                                        DIVISION.
+      *===============================================================*
+      *---------------------------------------------------------------*
+       FILE                                        SECTION.
+      *---------------------------------------------------------------*
+       FD EVSA0407.
+       01 REG-EVSA0407.
+          05 ARQ-CHAVE.
+             10 ARQ-AGENCIA PIC X(04).
+             10 ARQ-CONTA   PIC X(05).
+          05 ARQ-SALDO      PIC X(10).
+
+       FD SVSA0407
+            RECORDING MODE IS F
+            BLOCK CONTAINS 0 RECORDS.
+
+       01 FD-SVSA0407-REG  PIC X(27).
+
+      *---------------------------------------------------------------*
+       WORKING-STORAGE                             SECTION.
+      *---------------------------------------------------------------*
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '--------------I#BV0407------------------'.
+      *---------------------------------------------------------------*
+       COPY 'I#BV0407'.
+
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '-------VARIAVEIS DE STATUS--------------'.
+      *---------------------------------------------------------------*
+       77 FS-EVSA0407      PIC 9(02).
+       77 FS-SVSA0407      PIC 9(02).
+
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+                 '-------VARIAVEIS DE ACUMULACAO----------'.
+      *---------------------------------------------------------------*
+       77 WRK-REGLIDOS     PIC 9(03).
+       77 WRK-REGGRAVADOS  PIC 9(03).
+       77 WRK-REGEXCECAO   PIC 9(03) VALUE 0.
+       77 WRK-SIS-DATA     PIC 9(08).
+       77 WRK-FLAGERRO     PIC 9(02) VALUE 0.
+      *---------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+              '--------VARIAVEIS PARA MENSAGEM--------------'.
+      *---------------------------------------------------------------*
+       77 WRK-ESPACOS      PIC X(10) VALUE SPACES.
+       77 WRK-TRACOS       PIC X(22) VALUE ALL '-'.
+       77 WRK-ERROABERTARQ PIC X(23) VALUE
+                           'ERRO OPEN ARQ: SVSA0407'.
+       77 WRK-ERROCLOSEARQ PIC X(24) VALUE
+                           'ERRO CLOSE ARQ: SVSA0407'.
+       77 WRK-MSGCODAQRS   PIC X(13) VALUE 'CODIGO ERRO: '.
+
+       77 WRK-ERROABERTVSA PIC X(28) VALUE
+                           'ERRO OPEN ARQ VSAM: EVSA0407'.
+       77 WRK-ERRCLOSEVSAM PIC X(29) VALUE
+                           'ERRO CLOSE ARQ VSAM: EVSA0407'.
+       77 WRK-VSAMVAZIO    PIC X(29) VALUE
+                           'ARQUIVO VSAM VAZIO: EVSA0407 '.
+       77 WRK-MSGCODVSAM   PIC X(13) VALUE 'CODIGO VSAM: '.
+       77 WRK-MSGREGLIDOS  PIC X(19) VALUE 'REGISTRO LIDOS   : '.
+       77 WRK-MSGREGGRAV   PIC X(19) VALUE 'REGISTRO GRAVADOS: '.
+       77 WRK-MSGTOTEXCE   PIC X(19) VALUE 'TOTAL DE EXCECOES: '.
+       77 WRK-MSGEXCECAO   PIC X(27) VALUE
+                                     '---REGISTROS COM EXCECAO---'.
+       77 WRK-MSGFIMPROG   PIC X(22) VALUE '----FIM DE PROGRAMA---'.
+
+      *===============================================================*
+       PROCEDURE                                 DIVISION.
+      *===============================================================*
+
+      *---------------------------------------------------------------*
+       0000-PRINCIPAL                            SECTION.
+      *---------------------------------------------------------------*
+           PERFORM  1000-INICIAR.
+           PERFORM  2000-PROCESSAR UNTIL FS-EVSA0407 EQUAL 10.
+           PERFORM  3000-FINALIZAR.
+           GOBACK.
+      *---------------------------------------------------------------*
+       0000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1000-INICIAR                              SECTION.
+      *---------------------------------------------------------------*
+           OPEN INPUT EVSA0407.
+           OPEN OUTPUT SVSA0407.
+            PERFORM 1200-TESTA-STATUS
+           ACCEPT WRK-SIS-DATA FROM DATE YYYYMMDD.
+      *---------------------------------------------------------------*
+       1000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1200-TESTA-STATUS                         SECTION.
+      *---------------------------------------------------------------*
+           EVALUATE FS-EVSA0407
+            WHEN 0
+             READ EVSA0407
+            WHEN 10
+             MOVE 1 TO WRK-FLAGERRO
+             PERFORM 9000-TRATAERROS
+            WHEN OTHER
+             MOVE 2 TO WRK-FLAGERRO
+             PERFORM 9000-TRATAERROS
+           END-EVALUATE.
+
+           IF FS-SVSA0407 NOT EQUAL 0
+             MOVE 3 TO WRK-FLAGERRO
+              PERFORM 9000-TRATAERROS
+           END-IF.
+      *---------------------------------------------------------------*
+       1200-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2000-PROCESSAR                            SECTION.
+      *---------------------------------------------------------------*
+           IF ARQ-SALDO EQUAL ZEROS OR ARQ-SALDO IS NOT NUMERIC
+            MOVE ARQ-AGENCIA  TO WRK-SVSA0407-DADOS-AGENCIA
+            MOVE ARQ-CONTA    TO WRK-SVSA0407-DADOS-CONTA
+            MOVE ARQ-SALDO    TO WRK-SVSA0407-DADOS-SALDO
+            MOVE WRK-SIS-DATA TO WRK-SVSA0407-DADOS-DATA
+             IF WRK-REGEXCECAO EQUAL 0
+              DISPLAY WRK-MSGEXCECAO
+              DISPLAY WRK-ESPACOS
+             END-IF
+              DISPLAY WRK-CORPO
+               ADD 1 TO WRK-REGEXCECAO
+           ELSE
+            MOVE ARQ-AGENCIA  TO WRK-SVSA0407-DADOS-AGENCIA
+            MOVE ARQ-CONTA    TO WRK-SVSA0407-DADOS-CONTA
+            MOVE ARQ-SALDO    TO WRK-SVSA0407-DADOS-SALDO
+            MOVE WRK-SIS-DATA TO WRK-SVSA0407-DADOS-DATA
+             WRITE FD-SVSA0407-REG FROM WRK-CORPO
+              ADD 1 TO WRK-REGGRAVADOS
+           END-IF.
+
+           ADD 1 TO WRK-REGLIDOS.
+           READ EVSA0407.
+      *---------------------------------------------------------------*
+       2000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       3000-FINALIZAR                            SECTION.
+      *---------------------------------------------------------------*
+           CLOSE EVSA0407
+                 SVSA0407.
+           PERFORM 3100-TESTA-CLOSE.
+           PERFORM 3200-DISPLAY-FINALIZAR.
+      *---------------------------------------------------------------*
+       3000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       3100-TESTA-CLOSE                          SECTION.
+      *---------------------------------------------------------------*
+           IF FS-EVSA0407 NOT EQUAL ZEROS
+             MOVE 4 TO WRK-FLAGERRO
+             PERFORM 9000-TRATAERROS
+           END-IF.
+
+           IF FS-SVSA0407 NOT EQUAL ZEROS
+             MOVE 5 TO WRK-FLAGERRO
+             PERFORM 9000-TRATAERROS
+           END-IF.
+      *---------------------------------------------------------------*
+       3100-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       3200-DISPLAY-FINALIZAR                    SECTION.
+      *---------------------------------------------------------------*
+           DISPLAY WRK-ESPACOS.
+           DISPLAY WRK-TRACOS.
+           DISPLAY WRK-MSGREGLIDOS WRK-REGLIDOS.
+           DISPLAY WRK-MSGREGGRAV  WRK-REGGRAVADOS.
+           DISPLAY WRK-MSGTOTEXCE WRK-REGEXCECAO.
+           DISPLAY WRK-TRACOS.
+           DISPLAY WRK-MSGFIMPROG.
+      *---------------------------------------------------------------*
+       3200-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *-------------------------------------------------------------*
+       9000-TRATAERROS                           SECTION.
+      *-------------------------------------------------------------*
+           EVALUATE WRK-FLAGERRO
+            WHEN 1
+             DISPLAY WRK-VSAMVAZIO
+             DISPLAY WRK-MSGCODVSAM FS-EVSA0407
+            WHEN 2
+             DISPLAY WRK-ERROABERTVSA
+             DISPLAY WRK-MSGCODVSAM FS-EVSA0407
+            WHEN 3
+             DISPLAY WRK-ERROABERTARQ
+             DISPLAY WRK-MSGCODAQRS FS-SVSA0407
+            WHEN 4
+             DISPLAY WRK-ERRCLOSEVSAM
+             DISPLAY WRK-MSGCODVSAM FS-EVSA0407
+            WHEN 5
+             DISPLAY WRK-ERROCLOSEARQ
+             DISPLAY WRK-MSGCODAQRS FS-EVSA0407
+           END-EVALUATE.
+           GOBACK.
+      *-------------------------------------------------------------*
+       9000-99-FIM.                              EXIT.
+      *-------------------------------------------------------------*
