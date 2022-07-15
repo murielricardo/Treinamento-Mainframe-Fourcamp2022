@@ -1,0 +1,253 @@
+      *===============================================================*
+       IDENTIFICATION                                        DIVISION.
+      *===============================================================*
+
+       PROGRAM-ID. F25CIP1.
+
+      *===============================================================*
+      *   AUTOR....:MURIEL ANDRIGUETO                                 *
+      *   ANALISTA.:IVAN PETRUCCI                                     *
+      *   DATA ....:21/06/2022                                        *
+      *---------------------------------------------------------------*
+      *   OBJETIVO:EXECUCAO DE UM CICS DE CONSULTA DE FUNCIONARIOS    *
+      *                                                               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *   ARQUIVOS:                                                   *
+      *   DDNAME......                                                *
+      *    DDNAME              I/O                 INCLUDE/BOOK       *
+      *---------------------------------------------------------------*
+      *   MODULOS....:                             INCLUDE/BOOK       *
+      *===============================================================*
+      *=============================================================*
+       ENVIRONMENT                               DIVISION.
+      *=============================================================*
+      *=============================================================*
+       CONFIGURATION                               SECTION.
+      *=============================================================*
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+      *===============================================================*
+       DATA                                      DIVISION.
+      *===============================================================*
+
+      *===============================================================*
+       WORKING-STORAGE                            SECTION.
+      *===============================================================*
+
+           EXEC SQL
+             INCLUDE #BKFUNC
+           END-EXEC.
+
+           EXEC SQL
+             INCLUDE SQLCA
+           END-EXEC.
+
+           COPY F25CIM1.
+
+      *-------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+              '-------VARIAVEIS DE RECEBIMENTO DE DADOS----'.
+      *-------------------------------------------------------------*
+       01 WRK-DATAADM.
+          05 WRK-DATAANO    PIC X(04).
+          05 FILLER         PIC X(01) VALUE '-'.
+          05 WRK-DATAMES    PIC X(02).
+          05 FILLER         PIC X(01) VALUE '-'.
+          05 WRK-DATADIA    PIC X(02).
+
+      *-------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+              '-------VARIAVEIS DE MASCARA-----------------'.
+      *-------------------------------------------------------------*
+       77 WRK-SALARIO       PIC ZZ.ZZZ.ZZ9,99.
+
+      *-------------------------------------------------------------*
+       01 FILLER              PIC X(70) VALUE
+              '-------VARIAVEIS DE VERIFICACAO DE DADOS----'.
+      *-------------------------------------------------------------*
+       77 WRK-EMAIL-NULL PIC S9(04) COMP.
+       77 WRK-SQLCODE    PIC -999.
+       77 WRK-POS        PIC 9(02).
+
+      *===============================================================*
+       PROCEDURE                                 DIVISION.
+      *===============================================================*
+
+      *---------------------------------------------------------------*
+       0000-PRINCIPAL                            SECTION.
+      *---------------------------------------------------------------*
+            PERFORM 1000-INICIAR.
+            PERFORM 2000-PROCESSAR.
+            EXEC CICS
+              RETURN TRANSID ('T251')
+            END-EXEC.
+      *---------------------------------------------------------------*
+       0000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       1000-INICIAR                              SECTION.
+      *---------------------------------------------------------------*
+            EXEC CICS SEND
+               MAPSET('F25CIM1')
+               MAP('MAPA01')
+                ERASE
+               MAPONLY
+            END-EXEC.
+      *---------------------------------------------------------------*
+       1000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
+      *---------------------------------------------------------------*
+       2000-PROCESSAR                            SECTION.
+      *---------------------------------------------------------------*
+            EXEC CICS RECEIVE
+               MAPSET('F25CIM1')
+               MAP('MAPA01')
+               INTO(MAPA01I)
+            END-EXEC
+
+            IF EIBAID = ':'
+              EXEC CICS
+                RETURN
+              END-EXEC
+            END-IF.
+
+            IF EIBAID = '5'
+               MOVE IDI TO DB2-ID
+                EXEC SQL
+                  SELECT ID,NOME,SETOR,SALARIO,DATAADM,EMAIL
+                  INTO  :DB2-ID,
+                        :DB2-NOME,
+                        :DB2-SETOR,
+                        :DB2-SALARIO,
+                        :DB2-DATAADM,
+                        :DB2-EMAIL :WRK-EMAIL-NULL
+                  FROM IVAN.FUNC
+                   WHERE ID =:DB2-ID
+                   FETCH FIRST ROW ONLY
+                END-EXEC
+
+               EVALUATE SQLCODE
+                 WHEN 0
+                     MOVE DB2-NOME       TO NOMEO
+                     MOVE DB2-SETOR      TO SETORO
+                     MOVE DB2-SALARIO    TO WRK-SALARIO
+                     MOVE WRK-SALARIO    TO SALARIOO
+                     MOVE DB2-DATAADM    TO WRK-DATAADM
+                     MOVE WRK-DATADIA    TO DATADIAO
+                     MOVE WRK-DATAMES    TO DATAMESO
+                     MOVE WRK-DATAANO    TO DATAANOO
+                    IF WRK-EMAIL-NULL EQUAL 0
+                     MOVE DB2-EMAIL   TO EMAILO
+                    END-IF
+                     MOVE 'REGISTRO ENCONTRADO   ' TO MSGO
+                  WHEN 100
+                     MOVE 'REGISTRO NAO ENCONTRADO ' TO MSGO
+                  WHEN OTHER
+                   MOVE SQLCODE    TO WRK-SQLCODE
+                   MOVE 'ERRO.: '                  TO MSGO
+                   MOVE WRK-SQLCODE                TO MSGO(08:04)
+               END-EVALUATE
+
+            END-IF.
+      *-----------------------INSERIR REGISTRO-----------------------
+           IF EIBAID = '6'
+              MOVE 'ERRO: ' TO MSGO
+              MOVE 7 TO WRK-POS
+
+              IF IDI EQUAL 0 OR IDL EQUAL 0
+                MOVE 'ID,' TO MSGO(WRK-POS:3)
+                ADD 3 TO WRK-POS
+              END-IF
+
+              IF NOMEI EQUAL SPACES OR NOMEL EQUAL 0
+                MOVE 'NOME,' TO MSGO(WRK-POS:5)
+                ADD 5 TO WRK-POS
+              END-IF
+
+              IF SETORI EQUAL SPACES OR SETORL EQUAL 0
+                MOVE 'SETOR,' TO MSGO(WRK-POS:6)
+                ADD 6 TO WRK-POS
+              END-IF
+
+              IF SALARIOI EQUAL 0 OR SALARIOL EQUAL 0
+                MOVE 'SALARIO,' TO MSGO(WRK-POS:8)
+                ADD 8 TO WRK-POS
+              END-IF
+
+              IF DATADIAI EQUAL 0 OR DATADIAL EQUAL 0 OR
+                 DATAMESI EQUAL 0 OR DATAMESL EQUAL 0 OR
+                 DATAANOI EQUAL 0 OR DATAANOL EQUAL 0
+                MOVE 'DATAADM.' TO MSGO(WRK-POS:8)
+                ADD 8 TO WRK-POS
+              END-IF
+
+            IF WRK-POS EQUAL 7
+               MOVE IDI         TO DB2-ID
+               MOVE NOMEI       TO DB2-NOME
+               MOVE SETORI      TO DB2-SETOR
+               MOVE SALARIOI    TO DB2-SALARIO
+               MOVE DATADIAI    TO WRK-DATADIA
+               MOVE DATAMESI    TO WRK-DATAMES
+               MOVE DATAANOI    TO WRK-DATAANO
+               MOVE WRK-DATAADM TO DB2-DATAADM
+               MOVE EMAILI      TO DB2-EMAIL
+
+
+             EXEC SQL
+              INSERT INTO IVAN.FUNC(ID,NOME,SETOR,SALARIO,DATAADM,
+                                    EMAIL)
+                  VALUES (:DB2-ID,
+                          :DB2-NOME,
+                          :DB2-SETOR,
+                          :DB2-SALARIO,
+                          :DB2-DATAADM,
+                          :DB2-EMAIL)
+             END-EXEC
+
+             EVALUATE SQLCODE
+               WHEN 0
+                  EXEC SQL
+                    COMMIT
+                  END-EXEC
+                  MOVE 'REGISTRO INSERIDO ' TO MSGO
+               WHEN OTHER
+                  MOVE SQLCODE TO WRK-SQLCODE
+                  MOVE WRK-SQLCODE TO MSGO
+             END-EVALUATE
+            END-IF
+           END-IF.
+
+      *-----------------------------EXCLUSAO
+           IF EIBAID = '7'
+             MOVE IDI TO DB2-ID
+             EXEC SQL
+               DELETE FROM IVAN.FUNC WHERE ID = :DB2-ID
+             END-EXEC
+             EVALUATE SQLCODE
+               WHEN 0
+                 EXEC SQL
+                   COMMIT
+                 END-EXEC
+                 MOVE 'REGISTRO APAGADO '       TO MSGO
+               WHEN 100
+                 MOVE 'REGISTRO NAO ENCONTRADO' TO MSGO
+               WHEN OTHER
+                  MOVE SQLCODE TO WRK-SQLCODE
+                 MOVE WRK-SQLCODE TO MSGO
+             END-EVALUATE
+           END-IF.
+      *----------------------------------------------------------------
+             EXEC CICS SEND
+                MAPSET('F25CIM1')
+                MAP('MAPA01')
+                DATAONLY
+                FROM(MAPA01O)
+             END-EXEC.
+      *---------------------------------------------------------------*
+       2000-99-FIM.                              EXIT.
+      *---------------------------------------------------------------*
+
