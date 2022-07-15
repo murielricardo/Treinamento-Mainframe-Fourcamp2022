@@ -1,0 +1,16 @@
+//FOUR025X JOB 'CRIAVSAM',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010006
+//STEP1     EXEC PGM=IDCAMS                                             00020003
+//SYSPRINT  DD   SYSOUT=*                                               00030003
+//SYSIN     DD   *                                                      00040003
+ DEFINE CLUSTER (NAME(GR.FOUR025.EVSA0407) -                            00050006
+    IXD -                                                               00060003
+    VOL(PR39X7) -                                                       00070003
+    RECORDSIZE(19 19) -                                                 00080003
+    SHR(2) -                                                            00090005
+    TRK(2 1) -                                                          00100003
+    UNIQUE -                                                            00110003
+    KEYS(09 0) -                                                        00120003
+    FREESPACE(04 04) ) -                                                00130003
+    DATA(NAME(GR.FOUR025.EVSA0407.DATA)) -                              00140006
+    INDEX(NAME(GR.FOUR025.EVSA0407.INDEX))                              00150006
+                                                                        00160000

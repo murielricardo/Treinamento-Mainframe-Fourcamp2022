@@ -1,0 +1,7 @@
+//FOUR025X JOB 'EXEC COB',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00001100
+//STEP01   EXEC PGM=SORT                                                00001204
+//SORTIN   DD DSN=PR.FOUR025.FUNC,DISP=SHR                              00002000
+//SORTOUT  DD DSN=PR.FOUR025.FUNC,DISP=OLD                              00003007
+//SYSOUT   DD SYSOUT=*                                                  00004000
+//SYSIN    DD *                                                         00005000
+ SORT FIELDS=(36,04,A,06,30,A),FORMAT=BI                                00006011

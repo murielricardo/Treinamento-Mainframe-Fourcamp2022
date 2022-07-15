@@ -1,0 +1,10 @@
+//FOUR025X JOB 'ALUNO',MSGCLASS=X,CLASS=C,NOTIFY=FOUR025                00010003
+//*=================================================                    00020000
+//* JCL PARA COMPILAR PROGRAMAS CICS                                    00030000
+//*  NAME - NOME DO SEU PROGRAMA                                        00040000
+//*  INSTR - SUA CHAVE                                                  00050000
+//*=================================================                    00060000
+//         JCLLIB ORDER=GR.GERAL.PROCLIB                                00070000
+//*                                                                     00080000
+//COMPPLI  EXEC DFHCICS1,NAME=F25CIP3,INSTR='FOUR025',                  00090013
+//         LIB2='GR.GERAL'                                              00100000

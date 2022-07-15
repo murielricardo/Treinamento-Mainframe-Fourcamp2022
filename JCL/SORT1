@@ -1,0 +1,11 @@
+//FOUR025X JOB 'SORT1',CLASS=C,MSGCLASS=X,NOTIFY=&SYSUID                00010004
+//STEP01   EXEC PGM=SORT                                                00020002
+//SORTIN   DD   DSN=GR.FOUR025.MASSASRT,DISP=SHR                        00030004
+//SORTOUT  DD   SYSOUT=*                                                00040002
+//SYSOUT   DD   SYSOUT=*                                                00050002
+//*-- SORT SIMPLES  1 CHAVE SORT FIELDS=(01,04,CH,A)                    00060002
+//*-- SORT COMPOSTO 2 CHAVE SORT FIELDS=(01,04,CH,A,10,20,CH,A)         00070002
+//*-- SORT COMPOSTO 2 CHAVE SORT FIELDS=(01,04,A,10,20,A),FORMAT=CH     00080002
+//SYSIN    DD  *                                                        00090002
+  SORT FIELDS=(01,09,A),FORMAT=BI                                       00110005
+  SUM  FIELDS=(34,08,ZD)                                                00120005

@@ -1,0 +1,5 @@
+//FOUR025X JOB 'EXEC COB',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010001
+//EXECUTAR EXEC PGM=ARQ25054                                            00020015
+//STEPLIB  DD DSN=PR.FOUR025.OBJ,DISP=SHR                               00030001
+//ALUNOS   DD DSN=PR.FOUR025.ALUNOS,DISP=SHR                            00032015
+//SYSIN    DD *                                                         00040000

@@ -1,0 +1,9 @@
+//FOUR025X JOB 'EXEC COB',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010005
+//EXECUTAR EXEC PGM=REL2508                                             00020029
+//STEPLIB  DD DSN=PR.FOUR025.OBJ,DISP=SHR                               00030009
+//JCLFUNC  DD DSN=PR.FOUR025.FUNC,DISP=OLD                              00040015
+//LOGERROS DD DSN=PR.FOUR025.LOGERROS,DISP=SHR                          00080029
+//JCLRELAT DD DSN=PR.FOUR025.RELAT,DISP=MOD                             00090029
+//*JCLRELAT DD DSN=PR.FOUR025.RELAT,DISP=(NEW,CATLG,DELETE),            00111024
+//*         SPACE=(TRK,(1,1)),                                          00112024
+//*         DCB=(RECFM=FB,LRECL=59,BLKSIZE=0)                           00113024

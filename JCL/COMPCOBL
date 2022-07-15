@@ -1,0 +1,7 @@
+//FOUR025X JOB 'COMP VSAM',CLASS=C,MSGCLASS=X,NOTIFY=&SYSUID,TIME=(0,01)00270002
+// JCLLIB  ORDER=GR.GERAL.PROCLIB                                       00280002
+//COBCOMP  EXEC DFHCOBLB,LIB1=GR.FOUR025,NOME='FR25LVSA',LIB2=GR.GERAL  00290002
+//SYSTERM  DD  SYSOUT=*                                                 00300002
+//LKED.SYSIN    DD   *                                                  00310002
+  NAME  FR25LVSA(R) *                                                   00320002
+/*                                                                      00330002

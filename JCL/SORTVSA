@@ -1,0 +1,14 @@
+//FOUR025X JOB 'EXEC COB',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010001
+//********************************************************************  00011000
+//* SORT DE UM ARQUIVO VSAM                                          *  00012000
+//********************************************************************  00013000
+//STEP01   EXEC PGM=MD022501                                            00020000
+//SORTIN   DD   DSN=GR.IVAN.EVSA0407,DISP=SHR                           00030000
+//SORTOUT  DD   DSN=GR.FOUR025.SVSA0407,DISP=(NEW,CATLG,DELETE),        00040001
+//         SPACE=(TRK(1,1)),DCB=(LRECL=19,RECFM=FB)                     00041000
+//EXCECAO  DD   SYSOUT=*                                                00050000
+//SYSOUT   DD   SYSOUT=*                                                00050100
+//SYSIN    DD   *                                                       00051000
+ SORT FIELDS=COPY                                                       00060000
+ OUTFIL FNAMES=EXCECAO,INCLUDE=(10,10,CH,EQ,C'0000000000')              00070000
+ OUTFIL FNAMES=SORTOUT,SAVE                                             00080000

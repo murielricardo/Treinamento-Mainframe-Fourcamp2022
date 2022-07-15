@@ -1,0 +1,13 @@
+//FOUR025X JOB 'EXEC COB',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010008
+//STEP01   EXEC PGM=SORT                                                00020005
+//SORTIN   DD   DSN=GR.FOUR025.SRELBENE,DISP=SHR                        00030008
+//SORTOUT  DD   DSN=GR.FOUR025.SRELBENE,DISP=SHR                        00040008
+//SYSOUT   DD   SYSOUT=*                                                00050005
+//SYSIN    DD   *                                                       00060005
+  SORT FIELDS=(01,05,A),FORMAT=BI                                       00080011
+//STEP02   EXEC PGM=FR25RELB                                            00140008
+//STEPLIB  DD   DSN=GR.GERAL.LOADLIB,DISP=SHR                           00220001
+//SYSOUT   DD   SYSOUT=*                                                00221007
+//SRELBENE DD   DSN=GR.FOUR025.SRELBENE,DISP=SHR                        00230015
+//*RELBENE  DD   SYSOUT=*                                               00240009
+//RELBENE  DD   DSN=GR.FOUR025.RELBENE,DISP=MOD                         00270009

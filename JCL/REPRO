@@ -1,0 +1,6 @@
+//FOUR025X JOB 'EXE COB',CLASS=C,MSGCLASS=X,NOTIFY=&SYSUID,TIME=(0,01)  00010004
+//STEP1     EXEC PGM=IDCAMS                                             00020000
+//SYSPRINT  DD   SYSOUT=*                                               00030000
+//SYSIN     DD   *                                                      00040000
+ REPRO INDATASET(GR.IVAN.DADOS) -                                       00050005
+       OUTDATASET(GR.FOUR025.EVSA0407)                                  00060004

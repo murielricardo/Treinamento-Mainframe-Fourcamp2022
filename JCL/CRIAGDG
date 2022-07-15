@@ -1,0 +1,9 @@
+//FOUR025X JOB 'CRIAGDG',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01)  00010000
+//STEP1     EXEC PGM=IDCAMS                                             00020000
+//SYSPRINT  DD   SYSOUT=*                                               00030000
+//SYSIN     DD   *                                                      00040000
+  DEFINE GENERATIONDATAGROUP -                                          00050000
+     (NAME(GR.FOUR025.EXCSAIDA) -                                       00060000
+     NOEMPTY   -                                                        00062000
+     NOSCRATCH -                                                        00063000
+     LIMIT(03) )                                                        00064000

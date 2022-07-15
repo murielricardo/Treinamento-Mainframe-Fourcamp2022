@@ -1,0 +1,15 @@
+//FOUR025X JOB 'CRIAVSAM',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010003
+//STEP1     EXEC PGM=IDCAMS                                             00020000
+//SYSPRINT  DD   SYSOUT=*                                               00030000
+//SYSIN     DD   *                                                      00040000
+ DEFINE CLUSTER (NAME(GR.FOUR025.ARQVSAM.KSDS) -                        00050003
+    IXD -                                                               00060000
+    VOL(PR39X7) -                                                       00070000
+    RECORDSIZE(99 99) -                                                 00080000
+    SHR(2) -                                                            00090000
+    TRK(1 1) -                                                          00100000
+    UNIQUE -                                                            00110000
+    KEYS(05 0) -                                                        00120000
+    FREESPACE(04 04) ) -                                                00130000
+    DATA(NAME(GR.FOUR025.ARQVSAM.KSDS.DATA)) -                          00140003
+    INDEX(NAME(GR.FOUR025.ARQVSAM.KSDS.INDEX))                          00150003

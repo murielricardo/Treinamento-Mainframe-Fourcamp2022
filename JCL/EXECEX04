@@ -1,0 +1,24 @@
+//FOUR025X JOB 'COMP COB',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01) 00010000
+//STEP01   EXEC PGM=SORT                                                00011000
+//SORTIN   DD DSN=PR.FOUR025.CLIENTES,DISP=SHR                          00012004
+//SORTOUT  DD DSN=PR.FOUR025.CLIENTES,DISP=OLD                          00013004
+//SYSOUT   DD SYSOUT=*                                                  00013100
+//SYSIN    DD *                                                         00013200
+ SORT FIELDS=(01,08,A),FORMAT=BI                                        00013301
+/*                                                                      00013400
+//STEP02   EXEC PGM=SORT                                                00013500
+//SORTIN   DD DSN=PR.FOUR025.MOV0106,DISP=SHR                           00013604
+//SORTOUT  DD DSN=PR.FOUR025.MOV0106,DISP=OLD                           00013704
+//SYSOUT   DD SYSOUT=*                                                  00013800
+//SYSIN    DD *                                                         00013900
+ SORT FIELDS=(01,08,A,47,01,A),FORMAT=BI                                00014003
+/*                                                                      00015001
+//STEP03   EXEC PGM=FR25EX04                                            00016004
+//STEPLIB  DD DSN=PR.FOUR025.OBJ,DISP=SHR                               00017001
+//CLIENTES DD DSN=PR.FOUR025.CLIENTES,DISP=SHR                          00018005
+//MOV0106  DD DSN=PR.FOUR025.MOV0106,DISP=SHR                           00019005
+//LOGERROS DD DSN=PR.FOUR025.LOGERROS,DISP=SHR                          00020001
+//MOV0106A DD DSN=PR.FOUR025.MOV0106A,DISP=MOD                          00030005
+//MOV0106C DD DSN=PR.FOUR025.MOV0106C,DISP=MOD                          00031005
+//*MOV0106A DD SYSOUT=*                                                 00040004
+//*MOV0106C DD SYSOUT=*                                                 00050004

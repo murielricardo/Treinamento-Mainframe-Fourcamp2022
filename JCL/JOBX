@@ -1,0 +1,8 @@
+//FOUR025X JOB 'JOBX',MSGCLASS=X,CLASS=C,NOTIFY=&SYSUID,TIME=(0,01)     00010004
+//STEP01   EXEC PGM=SORT                                                00020002
+//SORTIN   DD   DSN=GR.FOUR025.EXECSAIDA(0),DISP=SHR                    00040004
+//SORTOUT  DD   DSN=GR.FOUR025.EXCSAIDA(+1),DISP=(,CATLG,DELETE),       00050004
+//         LIKE=GR.FOUR025.MOV1207                                      00051004
+//SYSOUT   DD   SYSOUT=*                                                00060002
+//SYSIN    DD *                                                         00070002
+ SORT FIELDS=COPY                                                       00080002
