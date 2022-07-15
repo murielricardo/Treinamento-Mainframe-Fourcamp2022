@@ -1,0 +1,55 @@
+      *====================================================             00010000
+       IDENTIFICATION                            DIVISION.              00020000
+      *====================================================             00030000
+       PROGRAM-ID. PROGX.                                               00040000
+                                                                        00050000
+      *=====================================================            00060000
+      *  AUTOR: MURIEL                                                  00070003
+      *  EMPRESA: FOURSYS                                               00080000
+      *=====================================================            00090000
+                                                                        00100000
+      *====================================================             00101000
+       ENVIRONMENT                               DIVISION.              00102000
+      *====================================================             00103000
+                                                                        00104000
+      *====================================================             00105000
+       DATA                                      DIVISION.              00106000
+      *====================================================             00107000
+       WORKING-STORAGE                           SECTION.               00108000
+                                                                        00108100
+       01 WRK-DADOS.                                                    00108500
+          05 WRK-PROGRAMA   PIC X(08).                                  00108600
+          05 WRK-SECAO      PIC X(04).                                  00108700
+          05 WRK-MENSAGEM   PIC X(30).                                  00108800
+          05 WRK-STATUS     PIC X(02).                                  00108900
+          05 FILLER         PIC X(14).                                  00109000
+                                                                        00109200
+      *====================================================             00109300
+       PROCEDURE                                 DIVISION.              00110000
+      *====================================================             00120000
+       0000-PRINCIPAL                            SECTION.               00130000
+            PERFORM 1000-INICIAR.                                       00130100
+            PERFORM 2000-PROCESSAR.                                     00130201
+            STOP RUN.                                                   00130500
+                                                                        00130600
+                                                                        00130700
+       1000-INICIAR                              SECTION.               00131000
+           MOVE 'PROGX'             TO WRK-PROGRAMA.                    00131101
+           MOVE '1000'              TO WRK-SECAO.                       00131201
+           MOVE 'ERRO NO OPEN     ' TO WRK-MENSAGEM.                    00131301
+           MOVE '35'                TO WRK-STATUS.                      00131401
+             PERFORM 9000-TRATA-ERROS.                                  00131501
+                                                                        00131900
+       2000-PROCESSAR                            SECTION.               00132000
+           MOVE 'PROGX'             TO WRK-PROGRAMA.                    00132101
+           MOVE '2000'              TO WRK-SECAO.                       00132201
+           MOVE 'ERRO NO READ     ' TO WRK-MENSAGEM.                    00132301
+           MOVE '47'                TO WRK-STATUS.                      00132401
+             PERFORM 9000-TRATA-ERROS.                                  00132501
+                                                                        00132601
+                                                                        00132701
+       3000-FINALIZAR                            SECTION.               00133000
+       3000-99-FIM.            EXIT.                                    00133101
+                                                                        00133301
+       9000-TRATA-ERROS                          SECTION.               00133400
+            CALL 'GRAVALOG' USING WRK-DADOS.                            00133500

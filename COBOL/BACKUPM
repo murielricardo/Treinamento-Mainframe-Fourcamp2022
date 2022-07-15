@@ -1,0 +1,69 @@
+F25CIM1 DFHMSD TYPE=MAP,MODE=INOUT,LANG=COBOL,CTRL=FREEKB,TIOAPFX=YES, *
+               MAPATTS=(COLOR)
+MAPA01  DFHMDI SIZE=(24,80)
+*--------------------------------------------------------------------
+        DFHMDF POS=(01,30),LENGTH=23,INITIAL='-----------------------',*
+               COLOR=TURQUOISE
+        DFHMDF POS=(02,30),LENGTH=23,INITIAL=' CONSULTA FUNCIONARIOS ',*
+               COLOR=TURQUOISE
+        DFHMDF POS=(03,30),LENGTH=23,INITIAL='-----------------------',*
+               COLOR=TURQUOISE
+*--------------------------------------------------------------------
+        DFHMDF POS=(05,15),LENGTH=10,INITIAL='ID.......:',             *
+               COLOR=GREEN
+ID      DFHMDF POS=(05,26),LENGTH=05,ATTRB=(UNPROT,IC,NUM),            *
+               COLOR=TURQUOISE
+        DFHMDF POS=(05,32),LENGTH=01,ATTRB=ASKIP
+*--------------------------------------------------------------------
+        DFHMDF POS=(07,15),LENGTH=10,INITIAL='NOME.....:',             *
+               COLOR=GREEN
+NOME    DFHMDF POS=(07,26),LENGTH=30,ATTRB=UNPROT,COLOR=TURQUOISE
+        DFHMDF POS=(07,57),LENGTH=01,ATTRB=ASKIP
+*--------------------------------------------------------------------
+        DFHMDF POS=(09,15),LENGTH=10,INITIAL='SETOR....:',             *
+               COLOR=GREEN
+SETOR   DFHMDF POS=(09,26),LENGTH=04,ATTRB=UNPROT,COLOR=TURQUOISE
+        DFHMDF POS=(09,31),LENGTH=01,ATTRB=ASKIP
+*--------------------------------------------------------------------
+        DFHMDF POS=(11,15),LENGTH=10,INITIAL='SALARIO..:',             *
+               COLOR=GREEN
+SALARIO DFHMDF POS=(11,26),LENGTH=13,ATTRB=(UNPROT,NUM),               *
+               PICOUT='X(13)',PICIN='9(11)V99',COLOR=TURQUOISE
+        DFHMDF POS=(11,40),LENGTH=01,ATTRB=ASKIP
+*--------------------------------------------------------------------
+        DFHMDF POS=(13,15),LENGTH=10,INITIAL='DATAADM..:',ATTRB=ASKIP, *
+               COLOR=GREEN
+DATADIA DFHMDF POS=(13,26),LENGTH=02,ATTRB=(UNPROT,NUM),COLOR=TURQUOISE
+        DFHMDF POS=(13,29),LENGTH=01,INITIAL='/',ATTRB=ASKIP,          *
+               COLOR=TURQUOISE
+DATAMES DFHMDF POS=(13,31),LENGTH=02,ATTRB=(UNPROT,NUM),COLOR=TURQUOISE
+        DFHMDF POS=(13,34),LENGTH=01,INITIAL='/',ATTRB=ASKIP,          *
+               COLOR=TURQUOISE
+DATAANO DFHMDF POS=(13,36),LENGTH=04,ATTRB=(UNPROT,NUM),COLOR=TURQUOISE
+        DFHMDF POS=(13,41),LENGTH=01,ATTRB=ASKIP
+*--------------------------------------------------------------------
+        DFHMDF POS=(15,15),LENGTH=10,INITIAL='EMAIL....:',             *
+               COLOR=GREEN
+EMAIL   DFHMDF POS=(15,26),LENGTH=40,ATTRB=UNPROT,COLOR=TURQUOISE
+        DFHMDF POS=(15,67),LENGTH=01,ATTRB=PROT
+*--------------------------------------------------------------------
+        DFHMDF POS=(20,15),LENGTH=04,INITIAL='MSG:',                   *
+               COLOR=TURQUOISE
+MSG     DFHMDF POS=(20,20),LENGTH=50,ATTRB=ASKIP,COLOR=TURQUOISE
+        DFHMDF POS=(20,71),LENGTH=01,ATTRB=PROT
+*--------------------------------------------------------------------
+        DFHMDF POS=(13,52),LENGTH=16,INITIAL='FORMATO:DD/MM/AA',       *
+               ATTRB=ASKIP,COLOR=GREEN
+        DFHMDF POS=(24,10),LENGTH=11,INITIAL='ENTER-LIMPA',ATTRB=ASKIP,*
+               COLOR=TURQUOISE
+        DFHMDF POS=(24,24),LENGTH=11,INITIAL='F5-CONSULTA',ATTRB=ASKIP,*
+               COLOR=TURQUOISE
+        DFHMDF POS=(24,38),LENGTH=11,INITIAL='F6-INCLUSAO',ATTRB=ASKIP,*
+               COLOR=TURQUOISE
+        DFHMDF POS=(24,52),LENGTH=11,INITIAL='F7-EXCLUSAO',ATTRB=ASKIP,*
+               COLOR=TURQUOISE
+        DFHMDF POS=(24,66),LENGTH=09,INITIAL='F10-SAIDA',ATTRB=ASKIP,  *
+               COLOR=TURQUOISE
+*--------------------------------------------------------------------
+        DFHMSD TYPE=FINAL
+        END

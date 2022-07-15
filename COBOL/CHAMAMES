@@ -1,0 +1,22 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CHAMAMES.
+       ENVIRONMENT DIVISION.
+      *-----------------------
+       DATA DIVISION.
+      *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+      *-----------------------
+       WORKING-STORAGE SECTION.
+
+      *-----------------------
+       77 WRK-DATA PIC X(30).
+       77 WRK-PROG PIC X(08) VALUE SPACES.
+
+       PROCEDURE DIVISION.
+             MOVE 'DEVOLMES' TO WRK-PROG.
+
+             CALL WRK-PROG USING WRK-DATA.
+              DISPLAY WRK-DATA.
+
+
+
+            STOP RUN.

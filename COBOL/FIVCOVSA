@@ -1,0 +1,54 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. FIVCOVSA.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+            COPY DFHAID.
+
+       01 WRK-DADOS.
+          05 WRK-CHAVE     PIC X(05).
+          05 WRK-NOME      PIC X(30).
+          05 WRK-SETOR     PIC X(04).
+          05 WRK-SALARIO   PIC X(10).
+          05 WRK-DATAADM   PIC X(10).
+          05 WRK-EMAIL     PIC X(40).
+
+       77 WRK-RESP     PIC S9(04) COMP.
+
+       LINKAGE                SECTION.
+       01 DFHCOMMAREA.
+          05 LNK-CHAVE     PIC X(05).
+          05 LNK-NOME      PIC X(30).
+          05 LNK-SETOR     PIC X(04).
+          05 LNK-SALARIO   PIC X(10).
+          05 LNK-DATAADM   PIC X(10).
+          05 LNK-EMAIL     PIC X(40).
+          05 LNK-STATUS    PIC X(01).
+       PROCEDURE                                 DIVISION.
+       0000-PRINCIPAL                            SECTION.
+
+            INICIAR
+               MOVE LNK-CHAVE TO WRK-CHAVE
+
+                 EXEC CICS READ
+                           FILE('FUNC')
+                           RIDFLD(WRK-CHAVE)
+                           INTO(WRK-DADOS)
+                           RESP(WRK-RESP)
+                 END-EXEC.
+
+            PROCESSAR
+                IF WRK-RESP EQUAL DFHRESP(NORMAL)
+                   MOVE WRK-NOME     TO LNK-NOME
+                   MOVE WRK-SETOR    TO LNK-SETOR
+                   MOVE WRK-SALARIO  TO LNK-SALARIO
+                   MOVE WRK-DATAADM  TO LNK-DATAADM
+                   MOVE WRK-EMAIL    TO LNK-EMAIL
+                   MOVE '1'          TO LNK-STATUS
+                ELSE
+                   MOVE '2'          TO LNK-STATUS
+                END-IF.
+
+          FINALIZAR
+            EXEC CICS
+              RETURN
+            END-EXEC.
